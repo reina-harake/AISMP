@@ -30,6 +30,8 @@ before(async () => {
   tok.nour = await login('nour@example.com');
   tok.rami = await login('rami@example.com');
   for (const [k, v] of Object.entries(tok)) assert.ok(v, `login failed for ${k}`);
+  // demo accounts can be switched to another language from the app; the tests expect the seeded ones
+  for (const k of ['nour', 'rami']) await call('PATCH', '/auth/me', { token: tok[k], body: { language: 'en' } });
 });
 
 // ------------------------------------------------------------------ auth
@@ -182,7 +184,8 @@ test('full workflow: review -> assign -> in progress -> resolved (+points, histo
   assert.equal((await call('PATCH', `/complaints/${id}/status`, { token: tok.admin, body: { status: 'assigned' } })).status, 400, 'admin must pick an employee');
 
   const emps = await call('GET', `/departments/${created.en.department_id}/employees`, { token: tok.admin });
-  const employeeId = emps.body.items[0].employee_id;
+  // the electricity account the rest of this test logs in as (other test runs may add employees)
+  const employeeId = (emps.body.items.find((e) => e.email === 'electricity@aismp.lb') || emps.body.items[0]).employee_id;
 
   const wrongDept = await call('PATCH', `/complaints/${id}/assign`, { token: tok.admin, body: { employee_id: employeeId, department_id: 1 } });
   assert.equal(wrongDept.status, 400);
@@ -344,7 +347,7 @@ test('French complaint is classified and notifications follow each user\'s langu
 });
 
 test('an employee moving a complaint to "assigned" takes it on', async () => {
-  const c = await call('POST', '/complaints', { token: tok.rami, body: { title: 'Water cut', description: 'No water in the building since yesterday morning' } });
+  const c = await call('POST', '/complaints', { token: tok.rami, body: { title: 'Water cut', description: 'No water in the building since yesterday morning', area: 'Mousseitbeh' } });
   assert.equal(c.status, 201);
   const id = c.body.complaint.complaint_id;
   const water = await login('water@aismp.lb');
@@ -383,7 +386,11 @@ test('chatbot: small talk, status lookup with privacy, problem -> offer -> submi
   assert.equal(offer.body.intent, 'report_problem');
   assert.equal(offer.body.offer.category, 'electricity');
   assert.ok(offer.body.buttons.some((b) => b.action === 'submit_complaint'));
-  const sub = await call('POST', '/chat', { token: tok.rami, body: { action: 'submit_complaint', text, lang: 'en' } });
+  // Beirut only: without an area the bot first asks which area, then the chosen area is sent back
+  const ask = await call('POST', '/chat', { token: tok.rami, body: { action: 'submit_complaint', text, lang: 'en' } });
+  assert.equal(ask.body.intent, 'ask_area');
+  assert.ok(ask.body.buttons.some((b) => b.area === 'Achrafieh'));
+  const sub = await call('POST', '/chat', { token: tok.rami, body: { action: 'submit_complaint', text, area: 'Achrafieh', lang: 'en' } });
   assert.equal(sub.status, 201);
   const d = await call('GET', `/complaints/${sub.body.complaint_id}`, { token: tok.rami });
   assert.equal(d.body.complaint.category, 'electricity');
@@ -398,4 +405,41 @@ test('chatbot: small talk, status lookup with privacy, problem -> offer -> submi
   const junk = await call('POST', '/chat', { body: { message: 'banana airplane', lang: 'en' } });
   assert.equal(junk.body.intent, 'unknown');
   assert.equal((await call('POST', '/chat', { body: { message: '' } })).status, 400);
+});
+
+// ------------------------------------------------------------------ contact details + password reset
+test('public contact details come from one place (website + chatbot)', async () => {
+  const m = await call('GET', '/municipality');
+  assert.equal(m.status, 200);
+  assert.equal(m.body.phone, '01 987 979');
+  assert.ok(m.body.map_url.startsWith('https://'));
+  assert.equal(m.body._note, undefined, 'internal note is not exposed');
+  const bot = await call('POST', '/chat', { body: { message: 'what are your opening hours', lang: 'en' } });
+  assert.equal(bot.body.intent, 'human_contact');
+  assert.ok(bot.body.messages[0].includes(m.body.phone));
+  assert.ok(bot.body.buttons.some((b) => b.href === m.body.map_url));
+  assert.ok(bot.body.buttons.some((b) => b.href === `tel:${m.body.phone_intl}`));
+});
+
+// Runs against a development server without SMTP, which returns the link (dev_reset_link) instead of emailing it.
+test('forgot password: one-time link, same answer for unknown emails', async () => {
+  const email = `reset${Date.now()}@example.com`;
+  assert.equal((await call('POST', '/auth/register', { form: regForm(person(email)) })).status, 201);
+
+  const unknown = await call('POST', '/auth/forgot-password', { body: { email: `nobody${Date.now()}@example.com` } });
+  const known = await call('POST', '/auth/forgot-password', { body: { email } });
+  assert.equal(unknown.status, 200);
+  assert.equal(known.body.message, unknown.body.message, 'no hint whether the account exists');
+  const token = new URL(known.body.dev_reset_link).searchParams.get('token');
+  assert.match(token, /^[a-f0-9]{64}$/);
+
+  const weak = await call('POST', '/auth/reset-password', { body: { token, password: 'short', password_confirm: 'short' } });
+  assert.equal(weak.status, 400);
+  const ok = await call('POST', '/auth/reset-password', { body: { token, password: 'Fresh12345', password_confirm: 'Fresh12345' } });
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  const again = await call('POST', '/auth/reset-password', { body: { token, password: 'Other12345', password_confirm: 'Other12345' } });
+  assert.equal(again.status, 400, 'a link works only once');
+
+  assert.equal((await call('POST', '/auth/login', { body: { email, password: 'abc12345' } })).status, 401);
+  assert.equal((await call('POST', '/auth/login', { body: { email, password: 'Fresh12345' } })).status, 200);
 });

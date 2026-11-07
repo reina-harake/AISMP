@@ -212,7 +212,7 @@ const HANDLERS = {
     if (PASSWORD_RE.test(text)) {
       return {
         messages: [c.t('passwordHelp', { name: MUNI.name[c.lang], phone: MUNI.phone })],
-        buttons: [c.user ? c.btn('profile', { to: '/profile' }) : c.btn('login', { to: '/login' })],
+        buttons: c.user ? [c.btn('profile', { to: '/profile' })] : [c.btn('forgot', { to: '/forgot-password' }), c.btn('login', { to: '/login' })],
       };
     }
     if (LOGIN_RE.test(text)) {
@@ -227,6 +227,11 @@ const HANDLERS = {
 
   human_contact: async (c) => ({
     messages: [c.t('contact', { name: MUNI.name[c.lang], phone: MUNI.phone, hours: MUNI.hours[c.lang], address: MUNI.address[c.lang] })],
+    // external links: opened in a new tab (map) or by the phone app (tel:)
+    buttons: [
+      c.btn('map', { href: MUNI.map_url }),
+      { label: c.btn('call').label.replace('{phone}', MUNI.phone), href: `tel:${MUNI.phone_intl}` },
+    ],
   }),
 
   // The person is describing a problem: classify it now and offer to file it.

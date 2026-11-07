@@ -27,8 +27,8 @@
   --sea-deep: #072f48;
   --harbour: #0b476c;
 
-  --critical: #9e1b1f;
-  --critical-tint: #f7dfdd;
+  --critical: #8a1538;     /* crimson leaning to wine, so it differs from the brand red */
+  --critical-tint: #f6dfe5;
   --high: #b86e00;
   --high-tint: #fbefd9;
   --medium: #0b476c;
@@ -125,7 +125,12 @@ img { max-width: 100%; }
   padding: .18rem .55rem .18rem .45rem; border-radius: var(--r-sm); white-space: nowrap;
 }
 .prio::before { content: ''; width: .5rem; height: .5rem; border-radius: 1px; background: currentColor; }
-.prio-critical { color: var(--critical); background: var(--critical-tint); }
+/* critical = solid crimson badge with a "!" so it never reads as plain brand red */
+.prio-critical { color: #fff; background: var(--critical); padding-inline-start: .3rem; }
+.prio-critical::before {
+  content: '!'; width: .95rem; height: .95rem; border-radius: 50%; background: #fff; color: var(--critical);
+  display: grid; place-items: center; font-size: .66rem; font-weight: 800; line-height: 1;
+}
 .prio-high { color: var(--high); background: var(--high-tint); }
 .prio-medium { color: var(--medium); background: var(--medium-tint); }
 .prio-low { color: var(--low); background: var(--low-tint); }
@@ -209,7 +214,13 @@ html[lang='ar'] .hero h1 { max-width: 20ch; }
 .figures { display: flex; flex-wrap: wrap; gap: 2.5rem 3.5rem; }
 .figure strong { display: block; font-size: var(--t-2xl); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .figure span { color: var(--ink-2); font-size: var(--t-sm); }
-.public-foot { color: var(--ink-3); font-size: var(--t-sm); padding-block-start: 2rem; border-block-start: 1.5px solid var(--stone); }
+.public-foot {
+  color: var(--ink-3); font-size: var(--t-sm); display: grid; gap: .5rem;
+  max-width: 1180px; margin-inline: auto; padding: 2rem clamp(1rem, 4vw, 3rem) 6rem;
+  border-block-start: 1.5px solid var(--stone);
+}
+.disclaimer { color: var(--ink-2); max-width: 70ch; }
+.disclaimer::before { content: ''; display: inline-block; width: .55rem; height: .55rem; margin-inline-end: .5rem; background: var(--gold); border-radius: 1px; }
 
 /* category bars (public + dashboard) */
 .bars { display: grid; gap: .55rem; max-width: 640px; }
@@ -428,6 +439,7 @@ html[dir='rtl'] .chat-fab { padding: .75rem .9rem .75rem 1.1rem; }
 .bot-turn { display: grid; gap: .45rem; justify-items: start; }
 
 .chat-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+a.chip-btn { text-decoration: none; display: inline-flex; align-items: center; }
 .chip-btn {
   font: inherit; font-size: var(--t-xs); font-weight: 600; cursor: pointer;
   background: var(--surface); color: var(--brand-deep); border: 1.5px solid #ecbcb8; border-radius: 999px; padding: .35rem .75rem;
@@ -457,7 +469,8 @@ html[dir='rtl'] .chat-fab { padding: .75rem .9rem .75rem 1.1rem; }
 html[dir='rtl'] .send-icon { transform: scaleX(-1); }
 
 /* keep page content clear of the floating button */
-.main, .public-main { padding-block-end: 6rem; }
+.main { padding-block-end: 6rem; }
+.public-main { padding-block-end: 1rem; }
 
 /* ---------------------------------------------------------- contact (home page) */
 .contact { padding-block: 2.5rem; border-block-start: 1.5px solid var(--stone); display: grid; gap: 1.25rem; }
@@ -488,3 +501,8 @@ html[dir='rtl'] .send-icon { transform: scaleX(-1); }
 .pw-toggle:hover { color: var(--ink); background: var(--stone-soft); }
 .pw-toggle[aria-pressed='true'] { color: var(--brand); }
 .pw-wrap .input::-ms-reveal { display: none; } /* hide Edge's built-in eye so there is only one */
+
+/* login: "Forgot password?" sits on the same line as the password label */
+.label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.label-row > label { font-weight: 600; font-size: var(--t-sm); }
+.forgot-link { font-size: var(--t-xs); font-weight: 600; }

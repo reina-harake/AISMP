@@ -139,14 +139,20 @@ export default function ChatWidget() {
                 </div>
                 {m.buttons?.length > 0 && (
                   <div className="chat-chips">
-                    {m.buttons.map((b, i) => (
+                    {m.buttons.map((b, i) => (/^(https:|tel:)/.test(b.href || '') ? (
+                      // outside links (Google Maps, phone call): only https: and tel: are allowed
+                      <a key={i} className="chip-btn" href={b.href} dir="auto"
+                        {...(b.href.startsWith('https:') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                        {b.label}
+                      </a>
+                    ) : (
                       <button key={i}
                         className={`chip-btn${b.action ? ' primary' : ''}`}
                         disabled={(b.action && m.used) || busy}
                         onClick={() => onButton(b, m)}>
                         {b.label}
                       </button>
-                    ))}
+                    )))}
                   </div>
                 )}
               </div>

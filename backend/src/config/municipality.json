@@ -1,15 +1,28 @@
 {
-  "_note": "Contact details shown by the chatbot. Keep in sync with frontend/src/municipality.js (home page contact section).",
+  "_note": "Single source of the municipality's contact details: used by the chatbot and served to the website at GET /api/municipality. Edit here only.",
   "name": { "en": "the Municipality of Beirut", "ar": "بلدية بيروت", "fr": "la Municipalité de Beyrouth" },
   "phone": "01 987 979",
+  "phone_intl": "+9611987979",
+  "plus_code": "VGX4+67F",
+  "map_url": "https://maps.google.com/?q=VGX4%2B67F+Beirut",
+  "address": {
+    "en": "VGX4+67F, Beirut",
+    "ar": "VGX4+67F، بيروت",
+    "fr": "VGX4+67F, Beyrouth"
+  },
   "hours": {
     "en": "Monday to Friday, 8:00 AM to 3:30 PM (closed Saturday and Sunday)",
     "ar": "من الاثنين إلى الجمعة، من 8:00 صباحاً حتى 3:30 بعد الظهر (مقفل السبت والأحد)",
     "fr": "du lundi au vendredi, de 8 h à 15 h 30 (fermé le samedi et le dimanche)"
   },
-  "address": {
-    "en": "VGX4+67F, Beirut",
-    "ar": "VGX4+67F، بيروت",
-    "fr": "VGX4+67F, Beyrouth"
-  }
+  "hours_table": [
+    {
+      "days": { "en": "Monday – Friday", "ar": "الاثنين – الجمعة", "fr": "Lundi – vendredi" },
+      "time": { "en": "8:00 AM – 3:30 PM", "ar": "8:00 صباحاً – 3:30 بعد الظهر", "fr": "8 h – 15 h 30" }
+    },
+    {
+      "days": { "en": "Saturday – Sunday", "ar": "السبت – الأحد", "fr": "Samedi – dimanche" },
+      "time": null
+    }
+  ]
 }

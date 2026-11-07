@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { homeFor, useAuth } from '../auth';
 import { useI18n } from '../i18n';
 import { Brand, ErrorBox, LangSwitch, Loading, PasswordInput, Prio, useLoad } from '../components/ui';
 import { CategoryBars } from './charts';
-import { MUNICIPALITY } from '../municipality';
 
 export function PublicLayout() {
   const { t } = useI18n();
@@ -23,6 +22,10 @@ export function PublicLayout() {
         )}
       </header></div>
       <Outlet />
+      <footer className="public-foot">
+        <p className="disclaimer">{t('landing.disclaimer')}</p>
+        <p>{t('landing.footer')}</p>
+      </footer>
     </>
   );
 }
@@ -80,32 +83,39 @@ export function Landing() {
       <PublicStatsSection stats={stats} />
 
       <ContactSection />
-
-      <footer className="public-foot">{t('landing.footer')}</footer>
     </main>
   );
 }
 
+// Contact details come from the backend (backend/src/config/municipality.json), the same file the chatbot uses.
 function ContactSection() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const info = useLoad(() => api.get('/municipality'), []);
+  const m = info.data;
+  if (!m) return null; // still loading, or unavailable: the rest of the page still works
+  const tr = (v) => v?.[lang] ?? v?.en;
   return (
     <section className="contact" aria-labelledby="contact-title">
       <h2 id="contact-title">{t('landing.contactTitle')}</h2>
       <div className="contact-grid">
         <div className="contact-card">
           <h3>{t('landing.contactAddress')}</h3>
-          <p><span dir="ltr">{MUNICIPALITY.plusCode}</span>, {t('landing.contactCity')}</p>
-          <a href={MUNICIPALITY.mapUrl} target="_blank" rel="noopener noreferrer">{t('landing.contactMap')}</a>
+          <p>{tr(m.address)}</p>
+          <a href={m.map_url} target="_blank" rel="noopener noreferrer">{t('landing.contactMap')}</a>
         </div>
         <div className="contact-card">
           <h3>{t('landing.contactPhone')}</h3>
-          <p><a className="contact-phone" href={MUNICIPALITY.phoneHref} dir="ltr">{MUNICIPALITY.phone}</a></p>
+          <p><a className="contact-phone" href={`tel:${m.phone_intl}`} dir="ltr">{m.phone}</a></p>
         </div>
         <div className="contact-card">
           <h3>{t('landing.contactHours')}</h3>
           <dl className="hours">
-            <dt>{t('landing.weekdays')}</dt><dd>{t('landing.weekdayHours')}</dd>
-            <dt>{t('landing.weekend')}</dt><dd className="closed">{t('landing.closed')}</dd>
+            {m.hours_table.map((row, i) => (
+              <div key={i} style={{ display: 'contents' }}>
+                <dt>{tr(row.days)}</dt>
+                {row.time ? <dd>{tr(row.time)}</dd> : <dd className="closed">{t('landing.closed')}</dd>}
+              </div>
+            ))}
           </dl>
         </div>
       </div>
@@ -182,13 +192,127 @@ export function Login() {
             value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </div>
         <div className="field">
-          <label htmlFor="pw">{t('fields.password')}</label>
+          <div className="label-row">
+            <label htmlFor="pw">{t('fields.password')}</label>
+            <Link to="/forgot-password" state={{ email: form.email }} className="forgot-link">{t('auth.forgotLink')}</Link>
+          </div>
           <PasswordInput id="pw" className="input" autoComplete="current-password" dir="ltr" required
             value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
         </div>
         <button className="btn btn-primary btn-lg" disabled={busy} style={{ width: '100%' }}>{t('auth.loginBtn')}</button>
         <p className="muted">{t('auth.noAccount')} <Link to="/register">{t('nav.register')}</Link></p>
         <p className="demo-note">{t('auth.demo')}</p>
+      </form>
+    </div>
+  );
+}
+
+/** Step 1 of a password reset: ask for the email, the server emails a one-time link. */
+export function ForgotPassword() {
+  const { t } = useI18n();
+  const loc = useLocation();
+  const [email, setEmail] = useState(loc.state?.email || '');
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(null);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setBusy(true); setError(null);
+    try { setDone(await api.post('/auth/forgot-password', { email })); } catch (err) { setError(err); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="auth-wrap">
+      <form className="auth-card stack" onSubmit={submit} noValidate>
+        <div className="stack" style={{ '--gap': '.4rem' }}>
+          <h1>{t('auth.forgotTitle')}</h1>
+          <p className="muted">{t('auth.forgotLead')}</p>
+        </div>
+        {done ? (
+          <>
+            <div className="alert alert-ok" role="status">{t('auth.forgotSent')}</div>
+            {done.dev_reset_link && (
+              // only returned by a development server that has no email configured
+              <div className="demo-note stack" style={{ '--gap': '.4rem' }}>
+                <p>{t('auth.devLinkNote')}</p>
+                <a href={done.dev_reset_link} style={{ wordBreak: 'break-all' }}>{t('auth.devLinkOpen')}</a>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <ErrorBox error={error} messages={{ 429: t('auth.tooMany') }} />
+            <div className="field">
+              <label htmlFor="email">{t('fields.email')}</label>
+              <input id="email" className="input" type="email" autoComplete="email" dir="ltr" required
+                value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <button className="btn btn-primary btn-lg" disabled={busy || !email} style={{ width: '100%' }}>{t('auth.forgotBtn')}</button>
+          </>
+        )}
+        <p className="muted"><Link to="/login">{t('auth.backToLogin')}</Link></p>
+      </form>
+    </div>
+  );
+}
+
+/** Step 2: the link from the email lands here (?token=...) to choose a new password. */
+export function ResetPassword() {
+  const { t } = useI18n();
+  const [params] = useSearchParams();
+  const token = params.get('token') || '';
+  const [form, setForm] = useState({ password: '', password_confirm: '' });
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const mismatch = form.password_confirm && form.password !== form.password_confirm;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (mismatch) return;
+    setBusy(true); setError(null);
+    try { await api.post('/auth/reset-password', { token, ...form }); setDone(true); } catch (err) { setError(err); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="auth-wrap">
+      <form className="auth-card stack" onSubmit={submit} noValidate>
+        <div className="stack" style={{ '--gap': '.4rem' }}>
+          <h1>{t('auth.resetTitle')}</h1>
+          {!done && <p className="muted">{t('auth.resetLead')}</p>}
+        </div>
+        {done ? (
+          <>
+            <div className="alert alert-ok" role="status">{t('auth.resetDone')}</div>
+            <Link className="btn btn-primary btn-lg" to="/login" style={{ width: '100%' }}>{t('auth.loginBtn')}</Link>
+          </>
+        ) : !/^[a-f0-9]{64}$/.test(token) ? (
+          <>
+            <div className="alert alert-error" role="alert">{t('auth.resetInvalid')}</div>
+            <Link className="btn btn-secondary" to="/forgot-password">{t('auth.resetAgain')}</Link>
+          </>
+        ) : (
+          <>
+            <ErrorBox error={error} messages={{ 429: t('auth.tooMany'), ...(error?.details ? {} : { 400: t('auth.resetInvalid') }) }} />
+            <div className="field">
+              <label htmlFor="pw">{t('fields.new_password')}</label>
+              <PasswordInput id="pw" autoComplete="new-password" dir="ltr" required
+                value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+              <span className="hint">{t('auth.pwHint')}</span>
+            </div>
+            <div className="field">
+              <label htmlFor="pw2">{t('auth.pwConfirm')}</label>
+              <PasswordInput id="pw2" autoComplete="new-password" dir="ltr" required
+                value={form.password_confirm} onChange={(e) => setForm({ ...form, password_confirm: e.target.value })} />
+              {mismatch && <span className="loc-error" role="status">{t('auth.pwMismatch')}</span>}
+            </div>
+            <button className="btn btn-primary btn-lg" disabled={busy || !form.password || mismatch} style={{ width: '100%' }}>
+              {t('auth.resetBtn')}
+            </button>
+            {error?.status === 400 && !error?.details && <Link to="/forgot-password">{t('auth.resetAgain')}</Link>}
+          </>
+        )}
       </form>
     </div>
   );

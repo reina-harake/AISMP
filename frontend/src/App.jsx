@@ -4,7 +4,7 @@ import { useI18n } from './i18n';
 import Layout from './components/Layout';
 import ChatWidget from './components/ChatWidget';
 import { Loading } from './components/ui';
-import { Landing, Login, PublicLayout, Register, Transparency } from './pages/Public';
+import { ForgotPassword, Landing, Login, PublicLayout, Register, ResetPassword, Transparency } from './pages/Public';
 import { CitizenHome, Notifications, Profile, Report } from './pages/Citizen';
 import { ComplaintDetail, ComplaintList } from './pages/Complaints';
 import Requests from './pages/Requests';
@@ -44,6 +44,8 @@ export default function App() {
         <Route index element={<Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<ResetPassword />} />
       </Route>
 
       <Route element={<Guard roles={ALL}><Layout /></Guard>}>

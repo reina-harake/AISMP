@@ -17,6 +17,15 @@ const env = {
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   uploadDir: process.env.UPLOAD_DIR || require('path').join(__dirname, '..', '..', 'uploads'),
   maxUploadMb: parseInt(process.env.MAX_UPLOAD_MB || '5', 10),
+  // public address of the website, used to build links in emails (password reset)
+  appUrl: (process.env.APP_URL || 'http://localhost:3000').replace(/\/+$/, ''),
+  smtp: {
+    host: process.env.SMTP_HOST || '',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.MAIL_FROM || 'AISMP <no-reply@aismp.local>',
+  },
 };
 
 if (env.nodeEnv === 'production' && env.jwtSecret === 'change_me_in_production') {

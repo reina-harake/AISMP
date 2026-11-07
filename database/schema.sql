@@ -137,6 +137,18 @@ CREATE TABLE IF NOT EXISTS notifications (
   INDEX idx_notif_user (user_id, is_read)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- "Forgot password?": one-time reset links (only a hash of the token is stored; 1 hour; single use)
+CREATE TABLE IF NOT EXISTS password_resets (
+  reset_id    INT AUTO_INCREMENT PRIMARY KEY,
+  user_id     INT NOT NULL,
+  token_hash  CHAR(64) NOT NULL UNIQUE,
+  expires_at  DATETIME NOT NULL,
+  used_at     DATETIME NULL,
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+  INDEX idx_reset_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Default departments (one per complaint category, used for auto-routing)
 INSERT IGNORE INTO departments (name, name_ar, category) VALUES
   ('Roads & Public Works', 'الأشغال العامة والطرقات', 'road_damage'),

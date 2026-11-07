@@ -29,6 +29,12 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/chat', require('./routes/chat'));
 
+// public contact details (home page); same file the chatbot answers from
+app.get('/api/municipality', (req, res) => {
+  const { _note, ...info } = require('./config/municipality.json'); // eslint-disable-line no-unused-vars
+  res.set('Cache-Control', 'public, max-age=300').json(info);
+});
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 

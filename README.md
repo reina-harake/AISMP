@@ -3,6 +3,8 @@
 CSC 599 Capstone, Lebanese American University
 Ali Rida & Reina Harake. Supervisor: Dr. Ibrahim El Bitar
 
+> **Student prototype.** This is a university project. It uses the Municipality of Beirut's name, crest and public contact details for realism, but it is **not** an official municipal service and is not affiliated with the municipality. The website says so in its footer.
+
 Citizens report problems (roads, street lighting, electricity, water, waste, noise, illegal construction, parking, stray animals, parks and public spaces) in **English, French, Arabic or Arabizi**. The AI classifies each complaint, predicts how urgent it is and routes it to the right municipal team, then the citizen follows it until it is resolved. The whole website works in English, Arabic (right-to-left) and French.
 
 | Tier | Folder | Tech |
@@ -21,7 +23,7 @@ cp .env.example .env        # change JWT_SECRET before any real deployment
 docker compose up --build
 ```
 
-The first build takes a few minutes (it trains the AI models). Then open:
+The first build takes about 15 minutes (it trains the AI models inside the image). Later builds are cached: editing the API or the chatbot rules retrains nothing, and editing the chatbot's example phrases (`ml-service/training/intents_*.py`) retrains only the chatbot model. Then open:
 
 - **Website: http://localhost:3000**
 - API health: http://localhost:5000/api/health
@@ -29,6 +31,7 @@ The first build takes a few minutes (it trains the AI models). Then open:
 
 Stop with Ctrl+C. Start again later with `docker compose up`.
 **Reset all data** (needed once after updating from an older version of this project, because the database schema changed): `docker compose down -v`, then `docker compose up --build`.
+**Updating an existing database instead** (keeps your data): run the new files in `database/migrations/` once, e.g. `docker compose exec -T db mysql -uaismp -paismp_pass aismp < database/migrations/006_password_resets.sql`.
 
 ### Demo accounts (password `Password123`)
 
@@ -57,15 +60,41 @@ With the stack running:
 cd backend && npm install && API_URL=http://localhost:5000 npm test
 ```
 
-15 end-to-end tests: auth, the AI pipeline in all four languages, evidence uploads, role-based access, the full complaint workflow, document requests, admin, dashboards, notifications in each user's language, and the chatbot (small talk, private status lookups, problem → offer → submission).
+No Node.js on your computer? Run them in a throwaway container instead (Windows Git Bash: prefix with `MSYS_NO_PATHCONV=1`):
+
+```bash
+docker run --rm -e API_URL=http://host.docker.internal:5000 -v "$PWD/backend/test:/t:ro" -w /t node:22-alpine node --test api.e2e.test.js
+```
+
+19 end-to-end tests: auth, the AI pipeline in all four languages, evidence uploads, role-based access, the full complaint workflow, document requests, admin, dashboards, notifications in each user's language, the chatbot (small talk, private status lookups, problem → offer → submission), the public contact details, and the forgot-password flow.
+
+The tests make many deliberately failed logins, so running them several times within 15 minutes trips the login rate limit (`429`). Restart the backend (`docker compose restart backend`) to reset it.
 
 ## What each role can do
 
 - **Citizen:** register with first and last name, email, Lebanese phone number, a copy of their national ID (JPG, PNG, WEBP or PDF) and the password typed twice (all required; only admins can open the ID copy, from Staff & users); report a problem in Beirut (text, district, address, location on a map of Beirut, photos/PDF) and see how the AI read it; follow each complaint's timeline; request documents; get notifications; earn points and levels (see Points and levels below).
 - **Employee:** their team's complaint queue sorted by urgency; move complaints through the workflow (taking a complaint moves it to "Assigned" to them); correct the AI's category or urgency; process document requests; team dashboard.
 - **Admin:** everything above for all teams; assign complaints to a team or employee (with each employee's open workload); full dashboard (daily trend, categories, urgency, recurring problems by area, team performance, how often the AI was corrected); create and disable staff accounts.
-- **Public:** a transparency page with anonymized statistics.
-- **Everyone:** the **municipality assistant** (chat bubble, bottom corner of every page).
+- **Public:** a transparency page with anonymized statistics; the municipality's address, phone and opening hours at the bottom of the home page.
+- **Everyone:** the **municipality assistant** (chat bubble, bottom corner of every page); a show/hide button on every password field; **Forgot password?** on the login page (see below).
+
+## Look and feel
+
+The design follows the Municipality of Beirut's crest (`frontend/public/beirut-shield.png`): red bands on white for the institution (buttons, header stripe, chat), the gold of the tower for accents (points, levels), the navy of the sea for data and links, and the cedar green only for "resolved / done". A red-white-red band runs across the top of every page. Critical complaints use a separate wine-crimson badge with a "!" so they never look like ordinary brand red. Colours are tokens at the top of `frontend/src/styles.css`.
+
+## Contact details
+
+The municipality's address, phone, map link and opening hours live in **one file**, `backend/src/config/municipality.json`. The chatbot answers from it (with **Open in Google Maps** and **Call** buttons), and the home page reads it from `GET /api/municipality`. Edit that file and restart the backend.
+
+## Forgot password
+
+1. **Forgot password?** on the login page → the user enters their email.
+2. The backend emails a one-time link (`/reset-password?token=…`), valid for **1 hour**, in the user's language. The answer is the same whether or not the email has an account, so the form can't be used to discover accounts. Only a SHA-256 hash of the token is stored (`password_resets` table); a new request cancels older links; at most 5 requests per 15 minutes.
+3. The link opens a page to type the new password twice.
+
+**Email setup.** Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` and `APP_URL` (the website's public address) in `.env`. Without `SMTP_HOST`, no email is sent: the link is printed in the backend log (`docker compose logs backend`), and a **development** server also shows it on screen so the feature can be demonstrated.
+
+> **Before hosting this anywhere public:** the backend image runs with `NODE_ENV=development`, which shows reset links on screen when no email server is set. That would let anyone reset anyone's password. Configure SMTP **and** set `NODE_ENV=production` (which also requires a real `JWT_SECRET`).
 
 ## How a complaint flows
 
@@ -144,8 +173,8 @@ A chat bubble on every page. It understands English, Arabic, Arabizi and French,
 | "how do I get a residence certificate?" | Lists the documents you can request online |
 | "how do I report a problem?", "what can you do?" | Explains how the platform works |
 | "how many points do I have?" | Explains points and shows yours |
-| "I forgot my password", "change language" | Account help |
-| "opening hours?", "phone number" | Municipality contact details (edit `backend/src/config/municipality.json`) |
+| "I forgot my password", "change language" | Account help (points to **Forgot password?**) |
+| "opening hours?", "phone number", "where is the municipality?" | Address, phone and hours, with **Open in Google Maps** and **Call** buttons (edit `backend/src/config/municipality.json`) |
 | "hi", "merci", "yalla bye" | Small talk |
 
 How it works: `ml-service /intent` decides what the person wants: a trained **Linear SVM** intent classifier (12 intents) plus a phrase list for small talk. It also extracts complaint numbers, including Arabic digits (رقم ٤). Then `backend /api/chat` runs the matching workflow with the user's real data. Filing a complaint needs at least 60% confidence and always a confirmation click. Visitors can ask general questions; personal data needs a login.
@@ -170,6 +199,9 @@ All routes are under `/api`. Auth: `Authorization: Bearer <token>`.
 | POST | /auth/login | public | Get JWT |
 | GET / PATCH | /auth/me | any | Current user / update name, phone, language |
 | POST | /auth/change-password | any | Change password |
+| POST | /auth/forgot-password | public | `{ email }`: emails a one-time reset link (same answer for unknown emails) |
+| POST | /auth/reset-password | public | `{ token, password, password_confirm }`: set a new password from the link |
+| GET | /municipality | public | Contact details (address, phone, map link, opening hours) |
 | POST | /complaints | citizen | Submit (JSON or multipart with `evidence` files) |
 | GET | /complaints | any (scoped) | List; filters `status, category, priority, area, department_id, assigned_to_me, q, sort, page, limit` |
 | GET | /complaints/:id | any (scoped) | Detail + history + attachments |
@@ -195,11 +227,11 @@ All routes are under `/api`. Auth: `Authorization: Bearer <token>`.
 
 ## Security (proposal §3.8)
 
-bcrypt password hashing (cost 12), JWT sessions, role-based access checked on every route, zod input validation, parameterized SQL only, helmet headers, rate limiting on failed logins, upload type/size limits with random file names, evidence served only through authorized routes.
+bcrypt password hashing (cost 12), JWT sessions, role-based access checked on every route, zod input validation, parameterized SQL only, helmet headers, rate limiting on failed logins and on reset requests, single-use password reset links that expire after 1 hour (only their hash is stored), upload type/size limits with random file names, evidence served only through authorized routes.
 
 ## Database
 
-`database/schema.sql` implements the ER diagram: `users`, `employees`, `departments`, `complaints`, `complaint_status_history`, `requests`, `notifications`, plus `complaint_attachments` (Upload Evidence use case), `users.points` (gamification) and `users.language`. `database/migrations/` holds changes for databases created with an older schema.
+`database/schema.sql` implements the ER diagram: `users`, `employees`, `departments`, `complaints`, `complaint_status_history`, `requests`, `notifications`, plus `complaint_attachments` (Upload Evidence use case), `users.points` (gamification), `users.language` and `password_resets` (forgot password). `database/migrations/` holds changes for databases created with an older schema.
 
 ## Next steps
 

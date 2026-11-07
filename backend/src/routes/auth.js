@@ -2,7 +2,10 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const { z } = require('zod');
 const rateLimit = require('express-rate-limit');
-const { query } = require('../config/db');
+const crypto = require('crypto');
+const { query, transaction } = require('../config/db');
+const env = require('../config/env');
+const { sendMail } = require('../services/mailer');
 const { signToken, authenticate } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const fs = require('fs');
@@ -152,6 +155,67 @@ router.post('/change-password', authenticate, validate(changePwSchema), asyncHan
     await bcrypt.hash(req.body.new_password, 12), req.user.user_id,
   ]);
   res.json({ message: 'Password updated' });
+}));
+
+// ------------------------------------------------------------------ forgot / reset password
+// 1) POST /forgot-password { email }: emails a one-time link valid for 1 hour.
+//    The answer is the same whether or not the email exists, so it can't be used to find accounts.
+// 2) POST /reset-password { token, password, password_confirm }: sets the new password.
+// Only a SHA-256 hash of the token is stored in the database.
+const RESET_MAIL = {
+  en: { subject: 'Reset your AISMP password', body: 'Hello {name},\n\nSomeone (hopefully you) asked to reset the password of your AISMP account.\nOpen this link within 1 hour to choose a new password:\n\n{link}\n\nIf you did not ask for this, you can ignore this email; your password stays the same.' },
+  ar: { subject: 'إعادة تعيين كلمة المرور على AISMP', body: 'مرحباً {name}،\n\nطُلبت إعادة تعيين كلمة المرور لحسابك على AISMP.\nافتح هذا الرابط خلال ساعة واحدة لاختيار كلمة مرور جديدة:\n\n{link}\n\nإذا لم تطلب ذلك، تجاهل هذه الرسالة وستبقى كلمة المرور كما هي.' },
+  fr: { subject: 'Réinitialiser votre mot de passe AISMP', body: 'Bonjour {name},\n\nUne réinitialisation du mot de passe de votre compte AISMP a été demandée.\nOuvrez ce lien dans l’heure pour choisir un nouveau mot de passe :\n\n{link}\n\nSi vous n’êtes pas à l’origine de cette demande, ignorez cet email ; votre mot de passe reste inchangé.' },
+};
+// every request counts here (the answer is always 200), so one person can't flood an inbox
+const forgotLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: 'draft-7', legacyHeaders: false,
+  message: { error: 'Too many reset requests, please try again later' },
+});
+const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
+const SENT_MSG = 'If an account exists for this email, a reset link has been sent. It is valid for 1 hour.';
+
+router.post('/forgot-password', forgotLimiter, validate(z.object({ email: z.string().trim().toLowerCase().email() })),
+  asyncHandler(async (req, res) => {
+    const [user] = await query('SELECT user_id, name, email, language, is_active FROM users WHERE email = ?', [req.body.email]);
+    if (!user || !user.is_active) return res.json({ message: SENT_MSG });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    // a new link replaces any older unused one
+    await query('UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL', [user.user_id]);
+    await query('INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, NOW() + INTERVAL 1 HOUR)',
+      [user.user_id, sha256(token)]);
+
+    const link = `${env.appUrl}/reset-password?token=${token}`;
+    const tpl = RESET_MAIL[user.language] || RESET_MAIL.en;
+    const sent = await sendMail({
+      to: user.email,
+      subject: tpl.subject,
+      text: tpl.body.replace('{name}', user.name.split(' ')[0]).replace('{link}', link),
+    });
+    // Development without an email server: return the link so the feature can be demonstrated.
+    // Never in production (it would let anyone reset anyone's password).
+    if (!sent && env.nodeEnv !== 'production') return res.json({ message: SENT_MSG, dev_reset_link: link });
+    res.json({ message: SENT_MSG });
+  }));
+
+const resetSchema = z.object({ token: z.string().regex(/^[a-f0-9]{64}$/, 'Invalid link'), password, password_confirm: z.string() })
+  .refine((v) => v.password === v.password_confirm, { message: 'The two passwords do not match', path: ['password_confirm'] });
+
+router.post('/reset-password', authLimiter, validate(resetSchema), asyncHandler(async (req, res) => {
+  const hash = await bcrypt.hash(req.body.password, 12);
+  const ok = await transaction(async (db) => {
+    const [row] = await db.query(
+      'SELECT reset_id, user_id FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > NOW() FOR UPDATE',
+      [sha256(req.body.token)]
+    );
+    if (!row) return false;
+    await db.query('UPDATE users SET password_hash = ? WHERE user_id = ?', [hash, row.user_id]);
+    await db.query('UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL', [row.user_id]);
+    return true;
+  });
+  if (!ok) throw new HttpError(400, 'This reset link is invalid or has expired. Please ask for a new one.');
+  res.json({ message: 'Password updated. You can now log in.' });
 }));
 
 module.exports = router;

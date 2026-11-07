@@ -7,7 +7,7 @@ import { areaLabel } from '../beirut';
 import { Empty, ErrorBox, Loading, Pager, useDeptName, useLoad, useToast } from '../components/ui';
 import { CategoryBars, DailyChart } from './charts';
 
-const PRIO_COLORS = { critical: '#9e1b1f', high: '#b86e00', medium: '#0b476c', low: '#a39a8c' };
+const PRIO_COLORS = { critical: '#8a1538', high: '#b86e00', medium: '#0b476c', low: '#a39a8c' };
 const PRIO_ORDER = ['critical', 'high', 'medium', 'low'];
 const STATUS_ORDER = ['submitted', 'under_review', 'assigned', 'in_progress', 'resolved', 'rejected'];
 
