@@ -1,0 +1,15 @@
+{
+  "_note": "Contact details shown by the chatbot. Keep in sync with frontend/src/municipality.js (home page contact section).",
+  "name": { "en": "the Municipality of Beirut", "ar": "بلدية بيروت", "fr": "la Municipalité de Beyrouth" },
+  "phone": "01 987 979",
+  "hours": {
+    "en": "Monday to Friday, 8:00 AM to 3:30 PM (closed Saturday and Sunday)",
+    "ar": "من الاثنين إلى الجمعة، من 8:00 صباحاً حتى 3:30 بعد الظهر (مقفل السبت والأحد)",
+    "fr": "du lundi au vendredi, de 8 h à 15 h 30 (fermé le samedi et le dimanche)"
+  },
+  "address": {
+    "en": "VGX4+67F, Beirut",
+    "ar": "VGX4+67F، بيروت",
+    "fr": "VGX4+67F, Beyrouth"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+.env
+backend/uploads/*
+!backend/uploads/.gitkeep
+__pycache__/
+*.pyc
+.venv/
+ml-service/models/*.joblib
+.DS_Store
+frontend/dist/

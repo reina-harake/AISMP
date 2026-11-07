@@ -1,0 +1,89 @@
+text,category
+"slm, fi jora ad hek bel autostrade 7ad el mafra2, ma3 kel shete btekbar",road_damage
+el zeft taba3 shere3na kello 7ofar w jowar wallah dammaro el sayyara,road_damage
+"trottoir mkassar 2oddem el madrase, imme w2e3et 3le mbere7",road_damage
+"plz ta3o zeftou el tari2 bel 7ara, sarlo sene hek",road_damage
+fi bala3a maftou7a bi nos el tari2 ma 3leya ghata,road_damage
+el jeser el zghir 3am yetsha22a2 w fi 7jar 3am yo2a3o,road_damage
+isharet el seir 3al mafra2 mtafye men jem3a w kel yom fi accident,road_damage
+el ralentisseur kello mkasar w msh mbayyan bel leil,road_damage
+"ma fi kahraba men embere7 bel ashrafiye, even el moteur ma3 ta3ta3",electricity
+el kahraba btiji se3a w btrou7 4 se3at hayda msh ma32ul,electricity
+fi cable wa2e3 3al ard 7ad el dekkene w 3am ytalle3 char,electricity
+"el poteau taba3 el kahraba ma2youl ktiiiir, ra7 yo2a3 3al beit",electricity
+el transfo bel 7ay 3emel sot w tele3 menno d5an aswad,electricity
+el sharit el ma2tou3 m3alla2 3al balcon taba3na w el wled bylemsouh,electricity
+"el kahraba 3am to3la w tenzal, 7ara2et el brrad w el tv",electricity
+sa7eb el moteur 2ate3 el eshtirak 3an kel el binaye bala sabab,electricity
+"el lamba taba3 el shere3 mtafye men shahr, ma mnshuf shi bel leil",street_lighting
+el lampadaire 2oddem el beit 3am ytaffe w ydawe tul el leil,street_lighting
+"kel el poteauyet bel shere3 mtafyin, el banet 5ayfin yemsho",street_lighting
+fi daw 3al zawye mdawe 24/24 7atta bel nhar,street_lighting
+el lamba el kbire 3al darj m7rou2a please ghayrouha,street_lighting
+"3atme ktir 7ad el jnayne, ma fi wala daw, saro el shabeb yo23do hnik bel leil",street_lighting
+sayara darbet 3amoud el daw w ba3do ma2youl 3al tari2,street_lighting
+"bel 7ay taba3na ma fi enara 3al tari2 abadan, please rakbo lambet",street_lighting
+"ma fi may 3al khazzen men 4 iyem, kif bado nes t3ish",water
+"fi tuyau mafzour ta7t el ard, el may 3am tetla3 3al zeft",water
+el majarir tayfin 3al shere3 w el ri7a btkhanne2,water
+el may el 3am tije men el 7anafiye safra w fiya trab,water
+"ba3d kel shete el tari2 bisir ba7er, el regar msakkar",water
+fi fuite bel compteur taba3 el may 2oddem el binaye men jem3a,water
+"daghet el may da3if ktir, ma btousal lal tabe2 el 5ames",water
+el majrour taba3 el binaye el 7ad 3am ysabbeb 3ana,water
+"el zbeleh sarla 5 iyem ma 7ada lammha, el ri7a ma btenn7amal",waste
+el poubellet tayfin w el kleb 3am tfallesh el akyes,waste
+camion el zbele mara2 w ma 2akhad shi,waste
+fi 7ada 3am yekebb ardmiyet w zbele bel wadi,waste
+"3am ye7r2o zbele 7ad el bnayet, el d5an fet 3al byout",waste
+ma fi container bel 7ara kella w el nes 3am tkebb 3al ard,waste
+fi ebar w kfoufe tebbiye mkabbabin 7ad el mostashfa,waste
+"el nifayet mkadsin 2oddem el madrase, jerdhen kbar",waste
+"el jiran fo2na 3am ya3mlo 7afle kel lele lal 3 el sob7, ma 3am nnem",noise
+fi pub bel shere3 el music ktiiir 3alye lal sob7,noise
+"el shabeb bl motosiklet 3am yfahhto kel el leil, ma fina nnem",noise
+3am y2awso bel hawa kel ma fi 3erss bel day3a,noise
+sot el moteur taba3 el jiran ktir 3ale w msh mrakkab silencieux,noise
+el chantier 3am yebda 5 el sob7 w bi da22o 7ad shebbekna,noise
+"kalb el jiran byenba7 tul el leil, 7akayna ma3o ma3 ma fi natije",noise
+"fi dekkene bt7ot speaker 3al tari2 w bt3alle el sot, msh ma32oul",noise
+jarna 3am yzid tabe2 bala permis w ma 7ada 3am y7ake,illegal_construction
+"fi 7ada 3am yebne 7eit 3al ard taba3 el baladiye, ra7o shoufo",illegal_construction
+el binaye el jdide 3am yebnoha bala rokhsa w 3am y7afro bel leil,illegal_construction
+"el ma7al ta7tna 3emel extension 3al trottoir b baton, sakkar el tari2",illegal_construction
+"3am y3ammro 3al sat7 bala ma ykoun ma3on permis, el binaye 2adime",illegal_construction
+el chantier ma 3le shi sour w el 7ajar 3am yo2a3 3al sayarat,illegal_construction
+"sakkaro el darj el 3am w 3emlouh parking ilon, mamnou3",illegal_construction
+"3am y7afro bel ard 7ad binayetna bala rokhsa, saro fi tsha2o2 bel 7itan",illegal_construction
+"kel yom fi 7ada saff 2oddem el garage, ma fiye etla3 bel sayyara",parking
+el sayarat saffin 3al trottoir w el nes 3am temshe bel tari2,parking
+fi sayara m2atta3a w metroke 7ad el beit men shahrein,parking
+el nes btsoff double file 2oddem el madrase w byetsakkar kel shi,parking
+"el ma7allet 7atin ghradon 3al rasif, ma fina nemshe",parking
+fi kamyon saff 3al mamarr taba3 el moshet,parking
+"sakkaro el madkhal taba3 el binaye b sayarton, w ma bi redo",parking
+"el valet taba3 el restaurant saff 3al trottoir kello, 3am nemshe ma3 el poussette bel shere3",parking
+fi kleb sharde ktir 7ad el madrase w el wled 5ayfin,stray_animals
+kalb 3add ebne w hala2 bel mostashfa,stray_animals
+"fi 2otat ktir bel binaye, 3am ywasso5o el darj",stray_animals
+"fi kalb mayyet? la2 msaweb, marmi 7ad el tari2 w ma 7ada sa2alo",stray_animals
+"el kleb bitlo7o el motosiklet bel leil, 5atar",stray_animals
+shefna 7ayye kbire bel jnayne 7ad el byout,stray_animals
+majmou3it klab bitnem 2oddem el binaye w bt3awwe 3al nes,stray_animals
+jarna mrabbe djej w 5aroof bel 7ara w el ri7a w el sot,stray_animals
+"el jnayne el 3amme mahjoura, el marje7 mkassra w el 3oshb yebes",public_spaces
+"fi shajra kbire ma2youle 3al shere3, ra7 to2a3 3al sayarat",public_spaces
+el banket bel jnayne kellon mkassrin w msh nedfin,public_spaces
+"katabo 3al 7itan taba3 el madrase kalem bshe3a, please em7ouh",public_spaces
+el nafoura bel se7a ma3ta2le w malyene ta7aleb,public_spaces
+"ghsoun el shajar 3am tlems el shbebik, baddna tash7il",public_spaces
+"we2e3 shajra ba3d el 3asfe w sakkaret el tari2 lal jnayne",public_spaces
+"el mal3ab taba3 el wled kello 7adid msaddi, 5atar",public_spaces
+"fi binaye 2adime mahjoura 7adna, 3am yo2a3 menna 7ajar",other
+"fi ktir bar8ash bel sayf, please rshho mobid",other
+"el ma3mal 7adna 3am ytalle3 d5an aswad, ma 3am nefta7 el shebbek",other
+ma fi yaftet asami lal shawere3 w el delivery dayman bido3,other
+"el balcon taba3 el binaye el 2adime 3am yetfatfat, 7ajar 3am yo2a3 3al nes",other
+"fi ma7al bi bi3 akel montahe el salahiye, w ma3o rokhsa?",other
+el 7ammamet el 3amme bel se7a dayman msakkara,other
+"fi jerdhen? la2 sraser bel binaye kella, baddna rash",other
